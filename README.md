@@ -15,6 +15,11 @@ Blockexplorers give us the ability to view lots of different information about t
 
 This particular project is very much open-ended. We'll add some challenges here to get your imagination going, but use Etherscan as a guide for features you might consider building in your project.
 
+## Architecture versions
+
+- [Architecture v0](Architecture-v0.md) describes the original starter application.
+- [Architecture v1](Architecture-v1.md) describes the expanded block and transaction explorer.
+
 ## Getting Started
 
 Clone this project to pull down some basic starter code.
@@ -126,3 +131,45 @@ Read more about the above in the [Alchemy SDK Surface docs](https://docs.alchemy
 - What transfers did an address receive this year?
 
 Good luck and have fun!
+
+## 7. Project change log
+
+This section records the explorer features added after the original starter displayed only the current block number.
+
+### Recent-block explorer
+
+The homepage now:
+
+1. requests the current Ethereum Mainnet block number with `alchemy.core.getBlockNumber()`;
+2. creates a list containing the current block and the nine preceding blocks; and
+3. requests their information with `alchemy.core.getBlock()`.
+
+Each block number in the table is a React Router link. This turns the block list into a useful starting point instead of a read-only number.
+
+### Block details and transactions
+
+Selecting a block opens `/block/:blockNumber`. The `BlockDetails` component calls `alchemy.core.getBlockWithTransactions()` so the page can show both block metadata and transaction objects.
+
+The block page teaches the connection between routing and data loading: the URL supplies the block number, `useParams()` reads it, and a route effect requests the matching block. It also handles block hashes as identifiers.
+
+### Transaction details
+
+Selecting a transaction opens `/tx/:transactionHash`. The transaction page calls:
+
+- `alchemy.core.getTransaction()` for transaction fields such as sender, recipient, value, nonce, and gas limits; and
+- `alchemy.core.getTransactionReceipt()` for final status, gas used, transaction position, contract creation, confirmations, and logs.
+
+The page combines these responses, which demonstrates why a transaction receipt is not simply a replacement for the transaction object: each endpoint provides a different part of the final picture.
+
+### Navigation and user experience
+
+The new interface includes:
+
+- a homepage link that returns users to the recent blocks;
+- back links from block and transaction pages;
+- loading and error states for network requests;
+- formatted timestamps, shortened hashes, gas values, and transaction counts;
+- event-log information when a receipt contains logs; and
+- responsive styling for smaller screens.
+
+The implementation also updates the original test setup so it mocks the Alchemy SDK and verifies that the latest-block heading can render.

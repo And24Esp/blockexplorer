@@ -1,0 +1,12 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Validate block explorer",
+			"type": "shell",
+			"command": "npm test -- --watchAll=false; npm run build",
+			"isBackground": false,
+			"group": "build"
+		}
+	]
+}

@@ -1,38 +1,269 @@
 .App {
+  min-height: 100vh;
+  background: #f5f7fb;
+  color: #172033;
+}
+
+.site-header {
+  height: 64px;
+  padding: 0 max(24px, calc((100vw - 1120px) / 2));
+  display: flex;
+  align-items: center;
+  background: #172033;
+}
+
+.brand {
+  color: #ffffff;
+  font-size: 1.15rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.page {
+  width: min(1120px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 48px 0 64px;
+}
+
+.page-heading {
+  margin-bottom: 24px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.page-heading h1 {
+  margin: 4px 0 0;
+  font-size: 2rem;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.latest-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.latest-block strong {
+  margin-top: 2px;
+  color: #172033;
+  font-size: 1.1rem;
+}
+
+.block-table-wrapper,
+.detail-card,
+.transactions-section,
+.logs-section {
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+}
+
+.block-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.block-table th,
+.block-table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.block-table th {
+  color: #64748b;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.block-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.block-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.block-link,
+.brand,
+.back-link,
+.transaction-row {
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.block-link {
+  color: #3157d5;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.block-link:hover,
+.back-link:hover {
+  color: #1d3da3;
+}
+
+.hash-cell {
+  font-family: monospace;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 28px;
+  color: #3157d5;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.detail-card {
+  padding: 8px 24px;
+}
+
+.detail-grid {
+  margin: 0;
+}
+
+.detail-item {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 24px;
+  padding: 16px 0;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.detail-item:last-child {
+  border-bottom: 0;
+}
+
+.detail-item dt {
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.detail-item dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-family: monospace;
+  font-size: 0.86rem;
+}
+
+.transactions-section,
+.logs-section {
+  margin-top: 24px;
+  padding: 20px 24px 24px;
+}
+
+.transactions-section h2,
+.logs-section h2 {
+  margin: 0 0 16px;
+  font-size: 1.1rem;
+}
+
+.transaction-list {
+  border: 1px solid #eef2f7;
+  border-radius: 8px;
+}
+
+.transaction-row {
+  min-height: 56px;
+  padding: 0 16px;
+  display: grid;
+  grid-template-columns: 180px minmax(180px, 1fr) minmax(180px, 1fr);
+  align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid #eef2f7;
+  color: #334155;
+  font-family: monospace;
+  font-size: 0.78rem;
+  text-decoration: none;
+}
+
+.transaction-row:last-child {
+  border-bottom: 0;
+}
+
+.transaction-row:hover {
+  background: #f8fafc;
+  color: #3157d5;
+}
+
+.transaction-hash {
+  font-family: monospace;
+  font-weight: 800;
+}
+
+.status-message,
+.empty-message {
+  padding: 32px;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #64748b;
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.error-message {
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fff1f2;
+  color: #b91c1c;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
+.log-list {
+  display: grid;
+  gap: 12px;
+}
+
+.log-row {
+  border: 1px solid #eef2f7;
+  border-radius: 8px;
+  padding: 0 16px;
+}
+
+@media (max-width: 760px) {
+  .page {
+    width: min(100% - 32px, 1120px);
+    padding-top: 32px;
   }
-}
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+  .page-heading {
+    align-items: flex-start;
   }
-  to {
-    transform: rotate(360deg);
+
+  .block-table-wrapper {
+    overflow-x: auto;
+  }
+
+  .block-table {
+    min-width: 720px;
+  }
+
+  .detail-item {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .transaction-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding-top: 14px;
+    padding-bottom: 14px;
   }
 }
