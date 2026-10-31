@@ -19,6 +19,7 @@ This particular project is very much open-ended. We'll add some challenges here 
 
 - [Architecture v0](Architecture-v0.md) describes the original starter application.
 - [Architecture v1](Architecture-v1.md) describes the expanded block and transaction explorer.
+- [Architecture v2](Architecture-v2.md) describes the block and account explorer application.
 
 ## Getting Started
 
@@ -173,3 +174,21 @@ The new interface includes:
 - responsive styling for smaller screens.
 
 The implementation also updates the original test setup so it mocks the Alchemy SDK and verifies that the latest-block heading can render.
+
+### Account Explorer tab
+
+Version 2 adds a second navigation tab for Ethereum account exploration.
+
+The Account Explorer search page validates that an address:
+
+1. begins with `0x`; and
+2. contains exactly 40 hexadecimal characters.
+
+When the user opens `/account/:address`, the page uses several Alchemy endpoints:
+
+- `alchemy.core.getBalance(address)` for the account's ETH balance;
+- `alchemy.core.getTransactionCount(address)` for the nonce and transaction count;
+- `alchemy.core.getCode(address)` to determine whether the address is a contract;
+- `alchemy.core.getAssetTransfers()` twice to collect recent incoming and outgoing transfers.
+
+The incoming and outgoing transfer lists are combined and deduplicated before they are displayed. Users can select a transfer to open its transaction details page.

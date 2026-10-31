@@ -5,6 +5,8 @@ import {
   Link,
   Route,
   Switch,
+  useHistory,
+  useLocation,
   useParams,
 } from 'react-router-dom';
 
@@ -40,6 +42,32 @@ const formatHash = (hash) => {
   if (!hash) return 'Unavailable';
   return `${hash.slice(0, 10)}...${hash.slice(-8)}`;
 };
+
+const formatEther = (value) => {
+  if (value === null || value === undefined) return 'Unavailable';
+
+  try {
+    const wei = BigInt(value.toString());
+    const whole = wei / 1000000000000000000n;
+    const fraction = (wei % 1000000000000000000n)
+      .toString()
+      .padStart(18, '0')
+      .replace(/0+$/, '');
+    return fraction ? `${whole}.${fraction}` : whole.toString();
+  } catch {
+    return value.toString();
+  }
+};
+
+const formatBlockNumber = (blockNumber) => {
+  if (!blockNumber) return 'Pending';
+  if (typeof blockNumber === 'string' && blockNumber.startsWith('0x')) {
+    return parseInt(blockNumber, 16).toLocaleString();
+  }
+  return blockNumber.toLocaleString ? blockNumber.toLocaleString() : blockNumber;
+};
+
+const isValidAddress = (address) => /^0x[a-fA-F0-9]{40}$/.test(address);
 
 function Loading({ message = 'Loading...' }) {
   return <div className="status-message">{message}</div>;
@@ -344,19 +372,254 @@ function TransactionDetails() {
   );
 }
 
+function AccountExplorer() {
+  const [address, setAddress] = useState('');
+  const [error, setError] = useState('');
+  const history = useHistory();
+
+  function handleSubmit(event) {
+    event.preventDefault();
+    const trimmedAddress = address.trim();
+
+    if (!isValidAddress(trimmedAddress)) {
+      setError('Enter a valid Ethereum address beginning with 0x and containing 40 hexadecimal characters.');
+      return;
+    }
+
+    setError('');
+    history.push(`/account/${trimmedAddress}`);
+  }
+
+  return (
+    <main className="page">
+      <section className="page-heading">
+        <div>
+          <p className="eyebrow">Ethereum Mainnet</p>
+          <h1>Account Explorer</h1>
+        </div>
+      </section>
+
+      <form className="account-search" onSubmit={handleSubmit}>
+        <label htmlFor="account-address">Ethereum address</label>
+        <div className="account-search-controls">
+          <input
+            id="account-address"
+            type="text"
+            value={address}
+            onChange={(event) => setAddress(event.target.value)}
+            placeholder="0x..."
+            autoComplete="off"
+            spellCheck="false"
+          />
+          <button type="submit">Look up account</button>
+        </div>
+        {error && <div className="error-message" role="alert">{error}</div>}
+      </form>
+    </main>
+  );
+}
+
+function AccountDetails() {
+  const { address } = useParams();
+  const [balance, setBalance] = useState(null);
+  const [transactionCount, setTransactionCount] = useState(null);
+  const [code, setCode] = useState('');
+  const [transfers, setTransfers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadAccount() {
+      if (!isValidAddress(address)) {
+        if (active) {
+          setError('The address in the URL is not a valid Ethereum address.');
+          setLoading(false);
+        }
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError('');
+
+        const category = ['external', 'erc20', 'erc721', 'erc1155'];
+        const [balanceResult, nonceResult, codeResult, incomingResult, outgoingResult] =
+          await Promise.all([
+            alchemy.core.getBalance(address),
+            alchemy.core.getTransactionCount(address),
+            alchemy.core.getCode(address),
+            alchemy.core.getAssetTransfers({
+              toAddress: address,
+              category,
+              maxCount: 25,
+              order: 'desc',
+            }),
+            alchemy.core.getAssetTransfers({
+              fromAddress: address,
+              category,
+              maxCount: 25,
+              order: 'desc',
+            }),
+          ]);
+
+        const transferMap = new Map();
+        [...(incomingResult.transfers || []), ...(outgoingResult.transfers || [])].forEach((transfer) => {
+          const key = `${transfer.hash}-${transfer.logIndex ?? transfer.category}-${transfer.asset ?? ''}`;
+          transferMap.set(key, transfer);
+        });
+
+        if (active) {
+          setBalance(balanceResult);
+          setTransactionCount(nonceResult);
+          setCode(codeResult);
+          setTransfers(
+            Array.from(transferMap.values()).sort((first, second) =>
+              Number(second.blockNum || 0) - Number(first.blockNum || 0)
+            )
+          );
+        }
+      } catch (requestError) {
+        if (active) {
+          setError(requestError.message || 'Unable to load this account.');
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    loadAccount();
+    return () => {
+      active = false;
+    };
+  }, [address]);
+
+  return (
+    <main className="page">
+      <Link className="back-link" to="/accounts">
+        &larr; Account search
+      </Link>
+
+      {loading && <Loading />}
+      {error && <ErrorMessage error={error} />}
+
+      {!loading && !error && (
+        <>
+          <section className="page-heading">
+            <div>
+              <p className="eyebrow">Ethereum account</p>
+              <h1>Account Details</h1>
+            </div>
+          </section>
+
+          <section className="detail-card">
+            <dl className="detail-grid">
+              <Detail label="Address" value={address} />
+              <Detail label="Balance (ETH)" value={formatEther(balance)} />
+              <Detail label="Balance (wei)" value={formatGasUsed(balance)} />
+              <Detail label="Transaction count" value={transactionCount} />
+              <Detail label="Account type" value={code && code !== '0x' ? 'Contract' : 'Externally owned account'} />
+              <Detail label="Contract code" value={code ? `${code.slice(0, 42)}${code.length > 42 ? '...' : ''}` : '0x'} />
+            </dl>
+          </section>
+
+          <section className="transactions-section">
+            <h2>Recent asset transfers ({transfers.length})</h2>
+            {!transfers.length && (
+              <div className="empty-message">No recent asset transfers were found.</div>
+            )}
+            {transfers.length > 0 && (
+              <div className="transfer-list">
+                {transfers.map((transfer, index) => (
+                  <Link
+                    className="transfer-row"
+                    to={`/tx/${transfer.hash}`}
+                    key={`${transfer.hash}-${transfer.logIndex ?? index}`}
+                  >
+                    <span>
+                      <strong>{transfer.asset || transfer.category}</strong>
+                      <small>{transfer.category}</small>
+                    </span>
+                    <span title={transfer.hash}>
+                      <strong>Hash</strong>
+                      <small>{formatHash(transfer.hash)}</small>
+                    </span>
+                    <span>
+                      <strong>{transfer.from?.toLowerCase() === address.toLowerCase() ? 'Sent to' : 'Received from'}</strong>
+                      <small>{formatHash(
+                        transfer.from?.toLowerCase() === address.toLowerCase()
+                          ? transfer.to
+                          : transfer.from
+                      )}</small>
+                    </span>
+                    <span>
+                      <strong>Amount</strong>
+                      <small>{transfer.value ?? 'NFT transfer'}</small>
+                    </span>
+                    <span>
+                      <strong>Block</strong>
+                      <small>{formatBlockNumber(transfer.blockNum)}</small>
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+        </>
+      )}
+    </main>
+  );
+}
+
+function ExplorerTabs() {
+  const location = useLocation();
+  const blockExplorerActive =
+    location.pathname === '/' ||
+    location.pathname.startsWith('/block/') ||
+    location.pathname.startsWith('/tx/');
+  const accountExplorerActive =
+    location.pathname.startsWith('/accounts') ||
+    location.pathname.startsWith('/account/');
+
+  return (
+    <nav className="explorer-tabs" aria-label="Explorer sections">
+      <Link
+        className={blockExplorerActive ? 'active' : ''}
+        to="/"
+        aria-current={blockExplorerActive ? 'page' : undefined}
+      >
+        Block Explorer
+      </Link>
+      <Link
+        className={accountExplorerActive ? 'active' : ''}
+        to="/accounts"
+        aria-current={accountExplorerActive ? 'page' : undefined}
+      >
+        Account Explorer
+      </Link>
+    </nav>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter>
       <div className="App">
         <header className="site-header">
-          <Link className="brand" to="/">
-            ETH Explorer
-          </Link>
+          <div className="header-content">
+            <Link className="brand" to="/">
+              ETH Explorer
+            </Link>
+            <ExplorerTabs />
+          </div>
         </header>
         <Switch>
           <Route exact path="/" component={LatestBlocks} />
           <Route path="/block/:blockNumber" component={BlockDetails} />
           <Route path="/tx/:transactionHash" component={TransactionDetails} />
+          <Route exact path="/accounts" component={AccountExplorer} />
+          <Route path="/account/:address" component={AccountDetails} />
         </Switch>
       </div>
     </BrowserRouter>

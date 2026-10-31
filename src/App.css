@@ -12,11 +12,48 @@
   background: #172033;
 }
 
+.header-content {
+  width: min(1120px, 100%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
 .brand {
   color: #ffffff;
   font-size: 1.15rem;
   font-weight: 800;
   text-decoration: none;
+}
+
+.explorer-tabs {
+  height: 64px;
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.explorer-tabs a {
+  min-width: 132px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 3px solid transparent;
+  color: #cbd5e1;
+  font-size: 0.88rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.explorer-tabs a:hover {
+  color: #ffffff;
+}
+
+.explorer-tabs a.active {
+  border-bottom-color: #7c9cff;
+  color: #ffffff;
 }
 
 .page {
@@ -208,6 +245,109 @@
   font-weight: 800;
 }
 
+.account-search {
+  margin-bottom: 24px;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.account-search label {
+  display: block;
+  margin-bottom: 8px;
+  color: #475569;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.account-search-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+}
+
+.account-search input {
+  min-width: 0;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  outline: none;
+  color: #172033;
+  font-family: monospace;
+}
+
+.account-search input:focus {
+  border-color: #3157d5;
+  box-shadow: 0 0 0 3px rgba(49, 87, 213, 0.12);
+}
+
+.account-search button {
+  height: 44px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 8px;
+  background: #3157d5;
+  color: #ffffff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.account-search button:hover {
+  background: #2446b5;
+}
+
+.account-search .error-message {
+  margin: 12px 0 0;
+}
+
+.transfer-list {
+  border: 1px solid #eef2f7;
+  border-radius: 8px;
+}
+
+.transfer-row {
+  min-height: 72px;
+  padding: 10px 16px;
+  display: grid;
+  grid-template-columns: minmax(100px, 1fr) minmax(140px, 1.5fr) minmax(140px, 1.5fr) minmax(90px, 1fr) 90px;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid #eef2f7;
+  color: #334155;
+  font-family: monospace;
+  font-size: 0.78rem;
+  text-decoration: none;
+}
+
+.transfer-row:last-child {
+  border-bottom: 0;
+}
+
+.transfer-row:hover {
+  background: #f8fafc;
+}
+
+.transfer-row > span {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.transfer-row strong {
+  color: #172033;
+  font-size: 0.76rem;
+}
+
+.transfer-row small {
+  overflow: hidden;
+  color: #64748b;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .status-message,
 .empty-message {
   padding: 32px;
@@ -238,6 +378,34 @@
 }
 
 @media (max-width: 760px) {
+  .site-header {
+    height: auto;
+    min-height: 64px;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .header-content {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .brand {
+    height: 56px;
+    display: flex;
+    align-items: center;
+  }
+
+  .explorer-tabs {
+    height: 48px;
+  }
+
+  .explorer-tabs a {
+    flex: 1;
+    min-width: 0;
+  }
+
   .page {
     width: min(100% - 32px, 1120px);
     padding-top: 32px;
@@ -263,6 +431,17 @@
   .transaction-row {
     grid-template-columns: 1fr;
     gap: 6px;
+    padding-top: 14px;
+    padding-bottom: 14px;
+  }
+
+  .account-search-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .transfer-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
     padding-top: 14px;
     padding-bottom: 14px;
   }

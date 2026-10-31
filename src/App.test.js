@@ -15,6 +15,10 @@ jest.mock('alchemy-sdk', () => ({
       getBlockWithTransactions: jest.fn(),
       getTransaction: jest.fn(),
       getTransactionReceipt: jest.fn(),
+      getBalance: jest.fn(),
+      getTransactionCount: jest.fn(),
+      getCode: jest.fn(),
+      getAssetTransfers: jest.fn(),
     },
   })),
   Network: { ETH_MAINNET: 'eth-mainnet' },
@@ -25,4 +29,11 @@ test('renders the latest blocks heading', async () => {
 
   expect(await screen.findByText('Latest Blocks')).toBeInTheDocument();
   expect(await screen.findByText('19000000')).toBeInTheDocument();
+});
+
+test('renders the block and account explorer tabs', () => {
+  render(<App />);
+
+  expect(screen.getByRole('link', { name: 'Block Explorer' })).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Account Explorer' })).toBeInTheDocument();
 });
