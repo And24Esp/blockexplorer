@@ -69,6 +69,58 @@ const formatBlockNumber = (blockNumber) => {
 
 const isValidAddress = (address) => /^0x[a-fA-F0-9]{40}$/.test(address);
 
+const FIELD_DEFINITIONS = {
+  Block: 'The sequential position of this block in the Ethereum chain.',
+  Timestamp: 'The date and time when this block was produced.',
+  Miner: 'The address that received rewards for producing this block.',
+  Transactions: 'The number of transactions included in this block.',
+  'Block hash': 'A unique cryptographic identifier for this block.',
+  'Parent hash': 'The hash of the block immediately before this one.',
+  'Transaction count': 'The total number of transactions in this block or sent by this account.',
+  'Gas used': 'The actual amount of gas consumed by the block or transaction.',
+  'Gas limit': 'The maximum amount of gas allowed for the block or transaction.',
+  'Base fee': 'The minimum gas price required for transaction inclusion in this block.',
+  'Transaction hash': 'A unique identifier used to locate this transaction on Ethereum.',
+  'Block number': 'The sequential number of the block containing this transaction.',
+  Status: 'Whether the transaction succeeded, failed, or is still pending.',
+  From: 'The account address that initiated the transaction.',
+  To: 'The recipient account or contract address; empty for contract creation.',
+  'Value (wei)': 'The ETH amount transferred, measured in wei.',
+  'Gas price (wei)': 'The price paid per unit of gas, measured in wei.',
+  Nonce: 'The sender account transaction sequence number.',
+  'Transaction index': 'The transaction position within its containing block.',
+  'Contract address': 'The address created by this transaction, when it deployed a contract.',
+  Confirmations: 'The number of blocks added after the block containing this transaction.',
+  Address: 'The Ethereum account or contract address.',
+  Topics: 'Indexed data emitted with a transaction log.',
+  'Balance (ETH)': 'The account total available balance converted to ETH.',
+  'Balance (wei)': 'The account total balance in wei, the smallest ETH unit.',
+  'Account type': 'Whether this address belongs to a contract or an externally owned account.',
+  'Contract code': 'The deployed bytecode that determines a contract account behavior.',
+  'Primary ENS name': 'The human-readable ENS name configured as this address primary name.',
+  'Ethereum address': 'A 42-character account identifier beginning with 0x.',
+  Asset: 'The asset category or token symbol represented by this transfer.',
+  Category: 'The Ethereum transfer type, such as external, ERC-20, ERC-721, or ERC-1155.',
+  Hash: 'A unique identifier for the transaction that recorded this transfer.',
+  'Sent to': 'The recipient address for an outgoing transfer.',
+  'Received from': 'The sender address for an incoming transfer.',
+  Amount: 'The quantity of the asset transferred in this record.'
+};
+
+function FieldTooltip({ label, children, definition }) {
+  const text = definition || FIELD_DEFINITIONS[label];
+  if (!text) return <>{children || label}</>;
+
+  return (
+    <span className="field-tooltip">
+      <span className="field-tooltip-trigger" tabIndex="0">
+        {children || label}
+      </span>
+      <span className="field-tooltip-text" role="tooltip">{text}</span>
+    </span>
+  );
+}
+
 function Loading({ message = 'Loading...' }) {
   return <div className="status-message">{message}</div>;
 }
@@ -142,10 +194,10 @@ function LatestBlocks() {
           <table className="block-table">
             <thead>
               <tr>
-                <th>Block</th>
-                <th>Timestamp</th>
-                <th>Miner</th>
-                <th>Transactions</th>
+                <th><FieldTooltip label="Block">Block</FieldTooltip></th>
+                <th><FieldTooltip label="Timestamp">Timestamp</FieldTooltip></th>
+                <th><FieldTooltip label="Miner">Miner</FieldTooltip></th>
+                <th><FieldTooltip label="Transactions">Transactions</FieldTooltip></th>
               </tr>
             </thead>
             <tbody>
@@ -250,10 +302,12 @@ function BlockDetails() {
                     key={transaction.hash}
                   >
                     <span className="transaction-hash" title={transaction.hash}>
-                      {formatHash(transaction.hash)}
+                      <FieldTooltip label="Transaction hash" definition={FIELD_DEFINITIONS['Transaction hash']}>
+                        {formatHash(transaction.hash)}
+                      </FieldTooltip>
                     </span>
-                    <span>{transaction.from}</span>
-                    <span>{transaction.to || 'Contract creation'}</span>
+                    <span><FieldTooltip label="From" definition={FIELD_DEFINITIONS.From}>{transaction.from}</FieldTooltip></span>
+                    <span><FieldTooltip label="To" definition={FIELD_DEFINITIONS.To}>{transaction.to || 'Contract creation'}</FieldTooltip></span>
                   </Link>
                 ))}
               </div>
@@ -268,7 +322,7 @@ function BlockDetails() {
 function Detail({ label, value }) {
   return (
     <div className="detail-item">
-      <dt>{label}</dt>
+      <dt><FieldTooltip label={label}>{label}</FieldTooltip></dt>
       <dd>{value ?? 'Unavailable'}</dd>
     </div>
   );
@@ -400,7 +454,7 @@ function AccountExplorer() {
       </section>
 
       <form className="account-search" onSubmit={handleSubmit}>
-        <label htmlFor="account-address">Ethereum address</label>
+        <label htmlFor="account-address"><FieldTooltip label="Ethereum address">Ethereum address</FieldTooltip></label>
         <div className="account-search-controls">
           <input
             id="account-address"
@@ -424,6 +478,7 @@ function AccountDetails() {
   const [balance, setBalance] = useState(null);
   const [transactionCount, setTransactionCount] = useState(null);
   const [code, setCode] = useState('');
+  const [ensName, setEnsName] = useState(null);
   const [transfers, setTransfers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -445,7 +500,7 @@ function AccountDetails() {
         setError('');
 
         const category = ['external', 'erc20', 'erc721', 'erc1155'];
-        const [balanceResult, nonceResult, codeResult, incomingResult, outgoingResult] =
+        const [balanceResult, nonceResult, codeResult, incomingResult, outgoingResult, ensNameResult] =
           await Promise.all([
             alchemy.core.getBalance(address),
             alchemy.core.getTransactionCount(address),
@@ -462,6 +517,7 @@ function AccountDetails() {
               maxCount: 25,
               order: 'desc',
             }),
+            alchemy.core.lookupAddress(address).catch(() => null),
           ]);
 
         const transferMap = new Map();
@@ -474,6 +530,7 @@ function AccountDetails() {
           setBalance(balanceResult);
           setTransactionCount(nonceResult);
           setCode(codeResult);
+          setEnsName(ensNameResult);
           setTransfers(
             Array.from(transferMap.values()).sort((first, second) =>
               Number(second.blockNum || 0) - Number(first.blockNum || 0)
@@ -516,6 +573,7 @@ function AccountDetails() {
           <section className="detail-card">
             <dl className="detail-grid">
               <Detail label="Address" value={address} />
+              <Detail label="Primary ENS name" value={ensName || 'No primary name configured'} />
               <Detail label="Balance (ETH)" value={formatEther(balance)} />
               <Detail label="Balance (wei)" value={formatGasUsed(balance)} />
               <Detail label="Transaction count" value={transactionCount} />
@@ -538,15 +596,15 @@ function AccountDetails() {
                     key={`${transfer.hash}-${transfer.logIndex ?? index}`}
                   >
                     <span>
-                      <strong>{transfer.asset || transfer.category}</strong>
-                      <small>{transfer.category}</small>
+                      <strong><FieldTooltip label="Asset">{transfer.asset || transfer.category}</FieldTooltip></strong>
+                      <small><FieldTooltip label="Category">{transfer.category}</FieldTooltip></small>
                     </span>
                     <span title={transfer.hash}>
-                      <strong>Hash</strong>
-                      <small>{formatHash(transfer.hash)}</small>
+                      <strong><FieldTooltip label="Hash">Hash</FieldTooltip></strong>
+                      <small><FieldTooltip label="Hash">{formatHash(transfer.hash)}</FieldTooltip></small>
                     </span>
                     <span>
-                      <strong>{transfer.from?.toLowerCase() === address.toLowerCase() ? 'Sent to' : 'Received from'}</strong>
+                      <strong><FieldTooltip label={transfer.from?.toLowerCase() === address.toLowerCase() ? 'Sent to' : 'Received from'}>{transfer.from?.toLowerCase() === address.toLowerCase() ? 'Sent to' : 'Received from'}</FieldTooltip></strong>
                       <small>{formatHash(
                         transfer.from?.toLowerCase() === address.toLowerCase()
                           ? transfer.to
@@ -554,12 +612,12 @@ function AccountDetails() {
                       )}</small>
                     </span>
                     <span>
-                      <strong>Amount</strong>
-                      <small>{transfer.value ?? 'NFT transfer'}</small>
+                      <strong><FieldTooltip label="Amount">Amount</FieldTooltip></strong>
+                      <small><FieldTooltip label="Amount">{transfer.value ?? 'NFT transfer'}</FieldTooltip></small>
                     </span>
                     <span>
-                      <strong>Block</strong>
-                      <small>{formatBlockNumber(transfer.blockNum)}</small>
+                      <strong><FieldTooltip label="Block">Block</FieldTooltip></strong>
+                      <small><FieldTooltip label="Block">{formatBlockNumber(transfer.blockNum)}</FieldTooltip></small>
                     </span>
                   </Link>
                 ))}

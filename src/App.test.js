@@ -19,6 +19,7 @@ jest.mock('alchemy-sdk', () => ({
       getTransactionCount: jest.fn(),
       getCode: jest.fn(),
       getAssetTransfers: jest.fn(),
+      lookupAddress: jest.fn().mockResolvedValue(null),
     },
   })),
   Network: { ETH_MAINNET: 'eth-mainnet' },

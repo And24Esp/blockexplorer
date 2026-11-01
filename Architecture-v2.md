@@ -47,7 +47,8 @@ The block and transaction screens share the existing loading, error, formatting,
    - `getAssetTransfers({ fromAddress: address })`
 5. The balance is converted from wei to a display value in ETH.
 6. Contract bytecode is used to classify the address as either a contract or an externally owned account.
-7. Incoming and outgoing transfers are combined, deduplicated by transfer key, sorted, and presented as links to transaction details.
+7. `lookupAddress(address)` performs an ENS reverse lookup for a configured primary name. A failed lookup or null result is shown as no primary name configured.
+8. Incoming and outgoing transfers are combined, deduplicated by transfer key, sorted, and presented as links to transaction details.
 
 ## Components and State
 
@@ -79,14 +80,15 @@ Formatting functions keep raw values available for request links while presentat
 - the shared header and two-tab navigation;
 - the account-address search form;
 - reusable account/detail cards;
-- asset-transfer rows that link to transaction pages; and
+- asset-transfer rows that link to transaction pages;
+- primary ENS names resolved from account addresses; and
 - mobile layouts for the header, form, detail values, and transfer records.
 
 ## Future Extension Points
 
 The account architecture can grow into additional features without changing the core block routes:
 
-- ENS resolution for names such as `vitalik.eth`.
+- Forward ENS resolution for names such as `vitalik.eth`.
 - Direct ERC-20 token balances.
 - Pagination for account transfer history.
 - NFT metadata and collection views.
